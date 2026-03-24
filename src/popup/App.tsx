@@ -40,6 +40,7 @@ type PersistedState = {
   selectedFriendIds: string[];
   selectedFriends: FriendItem[];
   selectedMusic: MusicItem | null;
+  musicStartTime: number;
 };
 
 type CurrentNoteStatus = {
@@ -103,6 +104,7 @@ const App: React.FC = () => {
   const [musicLoading, setMusicLoading] = useState(false);
   const [visibleMusicCount, setVisibleMusicCount] = useState(MUSIC_PAGE_SIZE);
   const [selectedMusic, setSelectedMusic] = useState<MusicItem | null>(null);
+  const [musicStartTime, setMusicStartTime] = useState(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -166,6 +168,7 @@ const App: React.FC = () => {
         const hasMusicCluster = Boolean(saved.selectedMusic.songId || saved.selectedMusic.audioClusterId);
         setSelectedMusic(hasMusicCluster ? saved.selectedMusic : null);
       }
+      if (typeof saved.musicStartTime === 'number') setMusicStartTime(saved.musicStartTime);
     });
   }, []);
 
@@ -177,9 +180,10 @@ const App: React.FC = () => {
       selectedFriendIds,
       selectedFriends,
       selectedMusic,
+      musicStartTime,
     };
     chrome.storage.local.set({ [POPUP_STATE_KEY]: state });
-  }, [audienceSetting, duration, customDurationMinutes, selectedFriendIds, selectedFriends, selectedMusic]);
+  }, [audienceSetting, duration, customDurationMinutes, selectedFriendIds, selectedFriends, selectedMusic, musicStartTime]);
 
   useEffect(() => {
     chrome.runtime.sendMessage({ type: 'GET_TOKENS' }, (response) => {
@@ -376,6 +380,7 @@ const App: React.FC = () => {
       audienceSetting,
       selectedFriendIds,
       selectedMusic,
+      musicStartTime: selectedMusic ? musicStartTime : 0,
     }, (response) => {
       setIsSubmitting(false);
       if (chrome.runtime.lastError) {
@@ -402,7 +407,7 @@ const App: React.FC = () => {
         setResult({ type: 'error', message: response?.error || t('share.error.failed') });
       }
     });
-  }, [tokens, noteText, duration, audienceSetting, selectedFriendIds, selectedMusic, isSubmitting, t]);
+  }, [tokens, noteText, duration, audienceSetting, selectedFriendIds, selectedMusic, musicStartTime, isSubmitting, t]);
 
   const charPercentage = (encodedLength / MAX_DESCRIPTION_LENGTH) * 100;
   const charStatus = charPercentage < 50 ? 'safe' : charPercentage < 80 ? 'warning' : 'danger';
@@ -787,20 +792,49 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="modal-body">
-              {selectedMusic && (
-                <div className="music-selected">
-                  <div className="music-selected-text">
-                    <strong>{selectedMusic.title}</strong>
-                    <span>{selectedMusic.artist || 'Unknown artist'}</span>
+              {selectedMusic && (() => {
+                const maxSec = selectedMusic.durationMs ? Math.floor(selectedMusic.durationMs / 1000) - 30 : 0;
+                const clampedStart = Math.min(musicStartTime, maxSec);
+                const formatSec = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+                return (
+                  <div className="music-selected-wrapper">
+                    <div className="music-selected">
+                      <div className="music-selected-text">
+                        <strong>{selectedMusic.title}</strong>
+                        <span>{selectedMusic.artist || 'Unknown artist'}</span>
+                      </div>
+                      <button
+                        className="music-clear-btn"
+                        onClick={() => { setSelectedMusic(null); setMusicStartTime(0); }}
+                      >
+                        {t('music.clear')}
+                      </button>
+                    </div>
+                    {maxSec > 0 && (
+                      <div className="music-timeline">
+                        <span className="music-timeline-label">{t('music.start_time')}</span>
+                        <div className="music-timeline-slider-wrap">
+                          <input
+                            id="music-timeline-slider"
+                            type="range"
+                            className="music-timeline-slider"
+                            min={0}
+                            max={maxSec}
+                            step={1}
+                            value={clampedStart}
+                            style={{ '--slider-value': `${maxSec > 0 ? Math.round((clampedStart / maxSec) * 100) : 0}%` } as React.CSSProperties}
+                            onChange={(e) => setMusicStartTime(Number(e.target.value))}
+                          />
+                          <div className="music-timeline-times">
+                            <span className="music-timeline-current">{formatSec(clampedStart)}</span>
+                            <span className="music-timeline-total">{formatSec(maxSec)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    className="music-clear-btn"
-                    onClick={() => setSelectedMusic(null)}
-                  >
-                    {t('music.clear')}
-                  </button>
-                </div>
-              )}
+                );
+              })()}
               <div className="music-search-row">
                 <input
                   className="music-search-input"
@@ -822,7 +856,7 @@ const App: React.FC = () => {
                   <button
                     key={`${item.id}-${item.songId || ''}`}
                     className={`music-item ${selectedMusic?.id === item.id ? 'active' : ''}`}
-                    onClick={() => setSelectedMusic(item)}
+                    onClick={() => { setSelectedMusic(item); setMusicStartTime(0); }}
                   >
                     <div className="music-item-top">
                       {item.imageUri ? (

@@ -23,6 +23,7 @@
   "music.search_placeholder": "Search music...",
   "music.search": "Search",
   "music.clear": "Clear",
+  "music.start_time": "Start from",
   "music.empty": "No music results. Try another keyword.",
   "music.load_more": "Scroll to load more...",
 

@@ -14,6 +14,7 @@ interface CreateNoteMessage {
     title: string;
     artist: string;
   } | null;
+  musicStartTime?: number;
 }
 
 interface GetTokensMessage {
@@ -117,7 +118,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       chrome.scripting.executeScript({
         target: { tabId: tabs[0].id },
         func: createNoteFromPage,
-        args: [message.tokens, message.description, message.duration, message.audienceSetting, message.selectedFriendIds || [], message.selectedMusic || null]
+        args: [message.tokens, message.description, message.duration, message.audienceSetting, message.selectedFriendIds || [], message.selectedMusic || null, message.musicStartTime ?? 0]
       }, (results) => {
         if (chrome.runtime.lastError || !results?.[0]) {
           clearTimeout(timeoutId);
@@ -355,7 +356,8 @@ async function createNoteFromPage(
   duration: number,
   audienceSetting: 'DEFAULT' | 'FRIENDS' | 'PUBLIC' | 'CONTACTS' | 'CUSTOM',
   selectedFriendIds: string[],
-  selectedMusic: { id: string; songId?: string; audioClusterId?: string; title: string; artist: string } | null
+  selectedMusic: { id: string; songId?: string; audioClusterId?: string; title: string; artist: string } | null,
+  musicStartTime: number = 0
 ): Promise<{ success: boolean; error?: string }> {
   const isSafeToken = (value: unknown): value is string => {
     return typeof value === 'string' && /^[A-Za-z0-9:_-]{6,300}$/.test(value);
@@ -474,14 +476,14 @@ async function createNoteFromPage(
         description: normalizedDescription,
         note_type: 'MUSIC_NOTE_WITH_TEXT',
         audio_cluster_id: preferredAudioClusterId,
-        song_start_time_ms: 0,
+        song_start_time_ms: musicStartTime * 1000,
       }
       : {
         ...baseInput,
         description: null,
         note_type: 'MUSIC_NOTE_MUSIC_ONLY',
         audio_cluster_id: preferredAudioClusterId,
-        song_start_time_ms: 0,
+        song_start_time_ms: musicStartTime * 1000,
       })
     : null;
 
@@ -504,7 +506,7 @@ async function createNoteFromPage(
           description: normalizedDescription,
           note_type: 'MUSIC_NOTE_WITH_TEXT',
           audio_cluster_id: audioClusterId,
-          song_start_time_ms: 0,
+          song_start_time_ms: musicStartTime * 1000,
         });
 
         variants.push({
@@ -513,7 +515,7 @@ async function createNoteFromPage(
           description: normalizedDescription,
           note_type: 'MUSIC_NOTE',
           audio_cluster_id: audioClusterId,
-          song_start_time_ms: 0,
+          song_start_time_ms: musicStartTime * 1000,
         });
       } else {
         variants.push({
@@ -522,7 +524,7 @@ async function createNoteFromPage(
           description: null,
           note_type: 'MUSIC_NOTE_MUSIC_ONLY',
           audio_cluster_id: audioClusterId,
-          song_start_time_ms: 0,
+          song_start_time_ms: musicStartTime * 1000,
         });
 
         variants.push({
@@ -531,7 +533,7 @@ async function createNoteFromPage(
           description: '',
           note_type: 'MUSIC_NOTE',
           audio_cluster_id: audioClusterId,
-          song_start_time_ms: 0,
+          song_start_time_ms: musicStartTime * 1000,
         });
       }
     }
