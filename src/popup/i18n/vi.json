@@ -1,0 +1,58 @@
+{
+  "app.title": "Invisible FB Notes",
+  "header.subtitle": "Tạo và đọc tin nhắn ẩn",
+  "preview.loading": "Đang tải ghi chú gần nhất...",
+  "preview.placeholder": "Ghi chú mới nhất sẽ hiển thị ở đây",
+
+  "composer.title": "Soạn ghi chú",
+  "composer.placeholder": "Viết ghi chú ở đây...",
+
+  "audience.title": "Đối tượng",
+  "audience.default": "Mặc định",
+  "audience.friends": "Bạn bè",
+  "audience.public": "Công khai",
+  "audience.contacts": "Bạn bè và quan hệ kết nối",
+  "audience.custom": "Bạn bè tuỳ chỉnh",
+
+  "duration.title": "Thời hạn",
+  "duration.custom_placeholder": "Số phút tuỳ chỉnh",
+  "duration.apply": "Áp dụng",
+  "duration.current": "Hiện tại: {duration}",
+
+  "music.title": "Nhạc",
+  "music.search_placeholder": "Tìm nhạc...",
+  "music.search": "Tìm",
+  "music.clear": "Xoá",
+  "music.empty": "Không có kết quả. Thử từ khoá khác.",
+  "music.load_more": "Cuộn để tải thêm...",
+
+  "friends.title": "Bạn bè tuỳ chỉnh ({count})",
+  "friends.search_placeholder": "Tìm bạn bè...",
+  "friends.search": "Tìm",
+  "friends.loading": "Đang tải bạn bè...",
+  "friends.empty": "Không tìm thấy bạn bè.",
+
+  "share.submitting": "Đang gửi...",
+  "share.button": "Chia sẻ",
+  "share.success": "Tạo note thành công!",
+  "share.error.empty": "Không thể gửi note trống trừ khi bạn chọn nhạc",
+  "share.error.missing_song": "Bài nhạc đang thiếu song ID. Vui lòng chọn lại.",
+  "share.error.failed": "Tạo note thất bại",
+
+  "action.github": "GitHub",
+  "action.language": "Ngôn ngữ",
+  "lang.vi": "VI",
+  "lang.en": "EN",
+
+  "status.share.default": "Chia sẻ theo mặc định",
+  "status.share.public": "Chia sẻ công khai",
+  "status.share.friends": "Chia sẻ với bạn bè",
+  "status.share.contacts": "Chia sẻ với bạn bè và quan hệ kết nối",
+  "status.share.custom.no_names": "Chia sẻ với bạn bè tuỳ chỉnh",
+  "status.share.custom.with_names": "Chia sẻ với: {names}",
+  "status.share.custom.with_names_more": "Chia sẻ với: {names} +{remaining}",
+
+  "status.expiry.unknown": "Không rõ thời gian hết hạn",
+  "status.expiry.with_days": "Hết hạn: {date} (còn {days} ngày {hours} giờ)",
+  "status.expiry.with_hours": "Hết hạn: {date} (còn {hours} giờ)"
+}

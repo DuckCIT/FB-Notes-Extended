@@ -1,0 +1,58 @@
+{
+  "app.title": "Invisible FB Notes",
+  "header.subtitle": "Create and read hidden messages",
+  "preview.loading": "Loading latest note...",
+  "preview.placeholder": "Your latest note will appear here",
+
+  "composer.title": "Composer",
+  "composer.placeholder": "Write your note here...",
+
+  "audience.title": "Audience",
+  "audience.default": "Default",
+  "audience.friends": "Friends",
+  "audience.public": "Public",
+  "audience.contacts": "Contacts",
+  "audience.custom": "Custom friends",
+
+  "duration.title": "Duration",
+  "duration.custom_placeholder": "Custom minutes",
+  "duration.apply": "Apply",
+  "duration.current": "Current: {duration}",
+
+  "music.title": "Music",
+  "music.search_placeholder": "Search music...",
+  "music.search": "Search",
+  "music.clear": "Clear",
+  "music.empty": "No music results. Try another keyword.",
+  "music.load_more": "Scroll to load more...",
+
+  "friends.title": "Custom Friends ({count})",
+  "friends.search_placeholder": "Search friends...",
+  "friends.search": "Search",
+  "friends.loading": "Loading friends...",
+  "friends.empty": "No friends found.",
+
+  "share.submitting": "Sending...",
+  "share.button": "Share",
+  "share.success": "Note created successfully!",
+  "share.error.empty": "Note cannot be empty unless you select a music track",
+  "share.error.missing_song": "Selected track is missing song ID. Please reselect music.",
+  "share.error.failed": "Failed to create note",
+
+  "action.github": "GitHub",
+  "action.language": "Language",
+  "lang.vi": "VI",
+  "lang.en": "EN",
+
+  "status.share.default": "Share by default",
+  "status.share.public": "Share publicly",
+  "status.share.friends": "Share with friends",
+  "status.share.contacts": "Share with contacts",
+  "status.share.custom.no_names": "Share with custom friends",
+  "status.share.custom.with_names": "Share with: {names}",
+  "status.share.custom.with_names_more": "Share with: {names} +{remaining}",
+
+  "status.expiry.unknown": "Expiration time unknown",
+  "status.expiry.with_days": "Expires: {date} ({days}d {hours}h left)",
+  "status.expiry.with_hours": "Expires: {date} ({hours}h left)"
+}
