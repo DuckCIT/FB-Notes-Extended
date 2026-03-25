@@ -233,11 +233,12 @@ body {
   color: rgba(240, 246, 252, 0.62);
 }
 
-.bubble-note-content:not(.is-shimmer) {
+/** when using this, the content isn't shown all, so I decide to comment it */
+/* .bubble-note-content:not(.is-shimmer) {
   display: flex;
   align-items: center;
   justify-content: center;
-}
+} */
 
 .bubble-note-content.is-shimmer {
   position: relative;
