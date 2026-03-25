@@ -57,6 +57,31 @@ interface SearchFriendsMessage {
 
 type ExtensionMessage = CreateNoteMessage | GetTokensMessage | GetCurrentNoteStatusMessage | DeleteNoteMessage | SearchMusicMessage | SearchFriendsMessage | PlayMusicMessage;
 
+// Priority: 1) active Facebook tab in current window, 2) any Facebook tab, 3) active tab
+function findBestTab (callback: (tab: chrome.tabs.Tab | null) => void): void {
+  // First: active tab in current window that is Facebook
+  chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
+    const activeTab = activeTabs[0];
+    if (activeTab?.url?.includes('facebook.com')) {
+      callback(activeTab);
+      return;
+    }
+
+    // Second: any Facebook tab across all windows
+    chrome.tabs.query({ url: '*://*.facebook.com/*' }, (fbTabs) => {
+      if (fbTabs.length > 0) {
+        // Prefer an active tab among the Facebook tabs, otherwise take the first one
+        const activeFbTab = fbTabs.find((t) => t.active) ?? fbTabs[0];
+        callback(activeFbTab);
+        return;
+      }
+
+      // Fallback: use whatever tab is active (will likely fail downstream, but keeps original behaviour)
+      callback(activeTab ?? null);
+    });
+  });
+};
+
 chrome.webNavigation.onCompleted.addListener((details) => {
   if (details.url.includes('facebook.com')) {
     chrome.scripting.executeScript({
@@ -75,14 +100,14 @@ function checkInitialState() {
 
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
   if (message.type === 'GET_TOKENS') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
-        sendResponse({ error: 'No active tab found' });
+    findBestTab((tab) => {
+      if (!tab?.id) {
+        sendResponse({ error: 'No Facebook tab found' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: getPageInfo
       }, (results) => {
         if (chrome.runtime.lastError || !results?.[0]) {
@@ -109,22 +134,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'CREATE_NOTE timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before creating a note' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: createNoteFromPage,
         args: [message.tokens, message.description, message.duration, message.audienceSetting, message.selectedFriendIds || [], message.selectedMusic || null, message.musicTrimStartMs || 0]
       }, (results) => {
@@ -169,22 +193,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'GET_CURRENT_NOTE_STATUS timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before fetching note status' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: fetchCurrentNoteStatusFromPage,
         args: [message.tokens]
       }, (results) => {
@@ -229,22 +252,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'SEARCH_MUSIC timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before searching music' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: searchMusicFromPage,
         args: [message.tokens, message.query, message.count ?? 80]
       }, (results) => {
@@ -273,22 +295,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'SEARCH_FRIENDS timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before searching friends' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: searchFriendsFromPage,
         args: [message.tokens, message.query, message.cursor ?? null, message.count ?? 20]
       }, (results) => {
@@ -317,22 +338,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'DELETE_NOTE timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before deleting a note' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: deleteNoteFromPage,
         args: [message.tokens, message.richStatusId]
       }, (results) => {
@@ -362,22 +382,21 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       replyOnce({ success: false, error: 'PLAY_MUSIC timeout: no response from tab context' });
     }, 20000);
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]?.id) {
+    findBestTab((tab) => {
+      if (!tab?.id) {
         clearTimeout(timeoutId);
-        replyOnce({ success: false, error: 'No active tab found' });
+        replyOnce({ success: false, error: 'No Facebook tab found' });
         return;
       }
 
-      const activeUrl = tabs[0].url || '';
-      if (!activeUrl.includes('facebook.com')) {
+      if (!tab.url?.includes('facebook.com')) {
         clearTimeout(timeoutId);
         replyOnce({ success: false, error: 'Open facebook.com tab before playing music' });
         return;
       }
 
       chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         func: playMusicFromPage,
         args: [message.tokens, message.musicId, message.songId, message.audioClusterId]
       }, (results) => {
